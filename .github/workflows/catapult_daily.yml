@@ -13,7 +13,7 @@ jobs:
 
       # --- Checkout all repos ---
 
-      - name: Checkout process_wimu
+      - name: Checkout process_catapult
         uses: actions/checkout@v4
 
       - name: Checkout dashboard_cargas

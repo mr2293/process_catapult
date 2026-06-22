@@ -60,7 +60,8 @@ data_agg <- stats_enriched %>%
     hsr_rel_raw           = sum(safe_col(cur_data(), "high_speed_distance_>75%_(total)"), na.rm = TRUE),
     hsr_rel_efforts       = sum(safe_col(cur_data(), "high_speed_efforts_>75%_(total)"), na.rm = TRUE),
     sprint_dist_raw       = sum(safe_col(cur_data(), "sprint_distance_>_30_km/hr"),       na.rm = TRUE),
-    sprint_efforts        = sum(safe_col(cur_data(), "sprint_efforts_>_30km/hr"),          na.rm = TRUE),
+    sprint_efforts_85pct  = sum(safe_col(cur_data(), "sprint_efforts"),                     na.rm = TRUE),
+    sprint_efforts_95pct  = sum(safe_col(cur_data(), "sprint_efforts_>_30km/hr"),          na.rm = TRUE),
     hr_exertion           = sum(safe_col(cur_data(), "heart_rate_exertion"),  na.rm = TRUE),
     energy                = sum(safe_col(cur_data(), "energy"),               na.rm = TRUE),
     red_zone              = sum(safe_col(cur_data(), "red_zone"),             na.rm = TRUE),
@@ -132,7 +133,8 @@ rename(
   player_load    = total_player_load,
   hmld_m         = hmld_gen2,
   max_speed      = max_velocity,
-  sprint_efforts_count = sprint_efforts
+  sprint_count_85pct = sprint_efforts_85pct,
+  sprint_count_95pct = sprint_efforts_95pct
 ) %>%
   
   # ---- Filter ----
@@ -145,7 +147,7 @@ select(
   session_duration,
   distance_m, dist_over_time,
   HSR_abs_dist, HSR_rel_dist, hsr_rel_efforts, HSR_over_time,
-  sprint_dist, sprint_efforts_count,
+  sprint_dist, sprint_count_85pct, sprint_count_95pct,
   max_speed, pct_max_velocity, profile_max_vel,
   player_load, pl_per_min,
   hmld_m,
