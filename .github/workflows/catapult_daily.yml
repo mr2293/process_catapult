@@ -30,6 +30,13 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           path: cargas_fisicas_7
 
+      - name: Checkout dashboard_femenil
+        uses: actions/checkout@v4
+        with:
+          repository: mr2293/dashboard_femenil
+          token: ${{ secrets.GH_PAT }}
+          path: dashboard_femenil
+
       # --- Set up R ---
 
       - name: Set up R
@@ -65,6 +72,12 @@ jobs:
           CARGAS7_XLSX: ${{ github.workspace }}/cargas_fisicas_7/data/Sessions_micro01.xlsx
         run: Rscript catapult_process_1ra.R
 
+      - name: Run femenil processing
+        env:
+          CATAPULT_TOKEN_FEMENIL: ${{ secrets.CATAPULT_TOKEN_FEMENIL }}
+          DASHBOARD_FEMENIL_CSV: ${{ github.workspace }}/dashboard_femenil/micros/micros_shiny_comb_fem.csv
+        run: Rscript catapult_process_femenil.R
+
       # --- Commit updated data files ---
 
       - name: Commit data to dashboard_cargas
@@ -91,9 +104,21 @@ jobs:
           git diff --staged --quiet || git commit -m "chore: update CATAPULT data $(date +'%Y-%m-%d')"
           git push
 
+      - name: Commit data to dashboard_femenil
+        run: |
+          cd ${{ github.workspace }}/dashboard_femenil
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git stash
+          git pull --rebase origin main
+          git stash pop || true
+          git add micros/micros_shiny_comb_fem.csv
+          git diff --staged --quiet || git commit -m "chore: update CATAPULT femenil data $(date +'%Y-%m-%d')"
+          git push
+
       # --- Deploy cargas_fisicas_7 to shinyapps.io ---
-      # dashboard_cargas has its own deploy workflow
-      # that triggers automatically on push — no need to deploy it here.
+      # dashboard_cargas and dashboard_femenil each have their own deploy
+      # workflow that triggers automatically on push — no need to deploy them here.
 
       - name: Deploy cargas_fisicas_7
         env:
