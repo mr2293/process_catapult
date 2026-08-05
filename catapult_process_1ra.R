@@ -173,6 +173,8 @@ cat(sprintf("\nProcessed %d rows for %d players across %d sessions.\n",
 # =============================================================================
 path_csv  <- Sys.getenv("DASHBOARD_CARGAS_CSV",
                         unset = "/Users/mateorodriguez/Desktop/analisis_CA/dashboard_cargas/micros/micros_shiny_comb.csv")
+path_fichas  <- Sys.getenv("DASHBOARD_CARGAS_CSV",
+                        unset = "/Users/mateorodriguez/Desktop/analisis_CA/fichas_post_partido/data/catapult_data.csv")
 path_xlsx <- Sys.getenv("CARGAS7_XLSX",
                         unset = "/Users/mateorodriguez/Desktop/analisis_CA/cargas_fisicas_7/data/Sessions_micro01.xlsx")
 path_xlsx_apertura26 <- "/Users/mateorodriguez/Desktop/analisis_CA/Temporadas/apertura_26/micros_procesados/Sessions_micro01.xlsx"
@@ -181,6 +183,10 @@ write_csv(data_micro, path_csv)
 
 if (dir.exists(dirname(path_xlsx))) {
   write_xlsx(data_micro, path = path_xlsx)
+}
+
+if (dir.exists(dirname(path_fichas))) {
+  write_xlsx(data_micro, path = path_fichas)
 }
 
 if (dir.exists(dirname(path_xlsx_apertura26))) {
