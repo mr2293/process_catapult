@@ -500,9 +500,11 @@ cat("============================\n")
 # View(parameters_df)
 if (interactive()) View(stats_df)
 
-library(writexl)
-path_xlsx <- "/Users/mateorodriguez/Desktop/analisis_CA/session-calculator/data/stats_df.xlsx"
-write_xlsx(stats_df, path = path_xlsx)
+if (interactive()) {
+  library(writexl)
+  path_xlsx <- "/Users/mateorodriguez/Desktop/analisis_CA/session-calculator/data/stats_df.xlsx"
+  write_xlsx(stats_df, path = path_xlsx)
+}
 
 names(stats_df)
 
