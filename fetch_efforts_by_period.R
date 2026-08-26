@@ -120,15 +120,15 @@ activities <- get_activities()
 # View(activities)
 
 # Step B: Pick an activity and get its periods ---------------------------------
-ACTIVITY_ID <- "02a62bde-e732-4b5b-a7a4-64fe7f36cafc"
+ACTIVITY_ID <- "c1bbbc84-b00a-4519-a69e-cbbf03c16769"
 periods <- get_periods(ACTIVITY_ID)
 # View(periods)
 
 # Step C: Pick the periods you want (vector of IDs) ---------------------------
 #     You can use one or many. Inspect `periods` to grab the correct IDs.
 PERIOD_IDS <- c(
-  "475a97a2-d9f4-44f0-9c63-ae8ca338f4a1",   # Primer Tiempo
-  "f20beaf1-c5df-4568-a937-84456dfa4df8"    # Segundo Tiempo
+  "6296e089-35fa-4974-bc90-439c7b3ce937",   # Primer Tiempo
+  "af2bf54e-332d-4cba-9fba-35c14775fd28"    # Segundo Tiempo
 )
 
 # Step D: Discover which athletes participated ---------------------------------
