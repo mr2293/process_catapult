@@ -195,5 +195,19 @@ if (dir.exists(dirname(path_xlsx_apertura26))) {
 
 path_xlsx_sc <- "/Users/mateorodriguez/Desktop/analisis_CA/session-calculator-r/data/stats_df.xlsx"
 if (dir.exists(dirname(path_xlsx_sc))) {
-  write_xlsx(stats_df, path = path_xlsx_sc)
+  # The session calculator needs period-level rows (to categorize each
+  # period into an activity type), so it can't use data_micro (aggregated
+  # per player/day). Join match_day onto stats_df at the period level
+  # instead, using the same DayCode-tag lookup and cleanup as data_micro.
+  stats_df_sc <- stats_df %>%
+    left_join(match_day_lookup, by = "activity_id") %>%
+    mutate(
+      match_day = case_when(
+        is.na(match_day_raw)  ~ NA_character_,
+        match_day_raw == "MD" ~ "MD",
+        TRUE                  ~ gsub(" MD", "", match_day_raw)
+      )
+    )
+
+  write_xlsx(stats_df_sc, path = path_xlsx_sc)
 }
