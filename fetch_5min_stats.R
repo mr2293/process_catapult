@@ -26,13 +26,13 @@ headers <- add_headers(
   Accept        = "application/json"
 )
 
-ACTIVITY_ID <- "c1bbbc84-b00a-4519-a69e-cbbf03c16769"
+ACTIVITY_ID <- "c1f449cb-e7eb-4a9c-b949-f036b57a8f49"
 SEGMENT_SECONDS <- 300   # 5 minutes
 
 # Half period IDs
 PERIOD_IDS <- c(
-  "6296e089-35fa-4974-bc90-439c7b3ce937",   # Primer Tiempo
-  "af2bf54e-332d-4cba-9fba-35c14775fd28"    # Segundo Tiempo
+  "8ce0c312-e5ed-4b21-8eb1-455d54f2e9c8",   # Primer Tiempo
+  "a64f2c25-2428-4866-bb92-07e6e3738c85"    # Segundo Tiempo
 )
 
 # Velocity band mapping (matching your Catapult config)

@@ -192,3 +192,8 @@ if (dir.exists(dirname(path_fichas))) {
 if (dir.exists(dirname(path_xlsx_apertura26))) {
   write_xlsx(data_micro, path = path_xlsx_apertura26)
 }
+
+path_xlsx_sc <- "/Users/mateorodriguez/Desktop/analisis_CA/session-calculator-r/data/stats_df.xlsx"
+if (dir.exists(dirname(path_xlsx_sc))) {
+  write_xlsx(stats_df, path = path_xlsx_sc)
+}
