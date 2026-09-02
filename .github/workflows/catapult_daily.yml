@@ -16,19 +16,12 @@ jobs:
       - name: Checkout process_catapult
         uses: actions/checkout@v4
 
-      - name: Checkout dashboard_cargas
+      - name: Checkout club_america_dashboard
         uses: actions/checkout@v4
         with:
-          repository: mr2293/dashboard_cargas
+          repository: mr2293/club_america_dashboard
           token: ${{ secrets.GH_PAT }}
-          path: dashboard_cargas
-
-      - name: Checkout cargas_fisicas_7
-        uses: actions/checkout@v4
-        with:
-          repository: mr2293/cargas_fisicas_7
-          token: ${{ secrets.GH_PAT }}
-          path: cargas_fisicas_7
+          path: club_america_dashboard
 
       - name: Checkout dashboard_femenil
         uses: actions/checkout@v4
@@ -68,8 +61,9 @@ jobs:
       - name: Run primer equipo processing
         env:
           CATAPULT_TOKEN: ${{ secrets.CATAPULT_TOKEN }}
-          DASHBOARD_CARGAS_CSV: ${{ github.workspace }}/dashboard_cargas/micros/micros_shiny_comb.csv
-          CARGAS7_XLSX: ${{ github.workspace }}/cargas_fisicas_7/data/Sessions_micro01.xlsx
+          DASHBOARD_CARGAS_CSV: ${{ github.workspace }}/club_america_dashboard/apps/dashboard_cargas/micros/micros_shiny_comb.csv
+          CARGAS7_XLSX: ${{ github.workspace }}/club_america_dashboard/apps/cargas_fisicas_7/data/Sessions_micro01.xlsx
+          SESSION_CALC_XLSX: ${{ github.workspace }}/club_america_dashboard/apps/session_calculator/data/stats_df.xlsx
         run: Rscript catapult_process_1ra.R
 
       - name: Run femenil processing
@@ -80,27 +74,18 @@ jobs:
 
       # --- Commit updated data files ---
 
-      - name: Commit data to dashboard_cargas
+      - name: Commit data to club_america_dashboard
         run: |
-          cd ${{ github.workspace }}/dashboard_cargas
+          cd ${{ github.workspace }}/club_america_dashboard
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git stash
           git pull --rebase origin main
           git stash pop || true
-          git add micros/micros_shiny_comb.csv
-          git diff --staged --quiet || git commit -m "chore: update CATAPULT data $(date +'%Y-%m-%d')"
-          for i in 1 2 3; do git push && break || sleep 10; done
-
-      - name: Commit data to cargas_fisicas_7
-        run: |
-          cd ${{ github.workspace }}/cargas_fisicas_7
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git stash
-          git pull --rebase origin main
-          git stash pop || true
-          git add data/Sessions_micro01.xlsx
+          git add \
+            apps/dashboard_cargas/micros/micros_shiny_comb.csv \
+            apps/cargas_fisicas_7/data/Sessions_micro01.xlsx \
+            apps/session_calculator/data/stats_df.xlsx
           git diff --staged --quiet || git commit -m "chore: update CATAPULT data $(date +'%Y-%m-%d')"
           for i in 1 2 3; do git push && break || sleep 10; done
 
@@ -116,21 +101,24 @@ jobs:
           git diff --staged --quiet || git commit -m "chore: update CATAPULT femenil data $(date +'%Y-%m-%d')"
           for i in 1 2 3; do git push && break || sleep 10; done
 
-      # --- Deploy cargas_fisicas_7 to shinyapps.io ---
-      # dashboard_cargas and dashboard_femenil each have their own deploy
-      # workflow that triggers automatically on push — no need to deploy them here.
+      # --- Deploy club_america_dashboard to shinyapps.io ---
+      # dashboard_femenil has its own deploy workflow that triggers
+      # automatically on push — no need to deploy it here. club_america_dashboard
+      # also has its own scheduled update-and-deploy workflow, but we deploy it
+      # here too so fresh CATAPULT data goes live immediately instead of
+      # waiting for that workflow's next cron run.
 
-      - name: Deploy cargas_fisicas_7
+      - name: Deploy club_america_dashboard
         env:
           SHINY_ACC_NAME: ${{ secrets.SHINY_ACC_NAME }}
           TOKEN: ${{ secrets.SHINY_TOKEN }}
           SECRET: ${{ secrets.SHINY_SECRET }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          docker build -t cargas_fisicas_7 cargas_fisicas_7/
+          docker build -t club_america_dashboard club_america_dashboard/
           docker run --rm \
             -e SHINY_ACC_NAME="${{ secrets.SHINY_ACC_NAME }}" \
             -e TOKEN="${{ secrets.SHINY_TOKEN }}" \
             -e SECRET="${{ secrets.SHINY_SECRET }}" \
             -e ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" \
-            cargas_fisicas_7
+            club_america_dashboard

@@ -172,11 +172,11 @@ cat(sprintf("\nProcessed %d rows for %d players across %d sessions.\n",
 # 8) Write outputs
 # =============================================================================
 path_csv  <- Sys.getenv("DASHBOARD_CARGAS_CSV",
-                        unset = "/Users/mateorodriguez/Desktop/analisis_CA/dashboard_cargas/micros/micros_shiny_comb.csv")
-path_fichas  <- Sys.getenv("DASHBOARD_CARGAS_CSV",
+                        unset = "/Users/mateorodriguez/Desktop/analisis_CA/club_america_dashboard/apps/dashboard_cargas/micros/micros_shiny_comb.csv")
+path_fichas  <- Sys.getenv("FICHAS_POST_PARTIDO_CSV",
                         unset = "/Users/mateorodriguez/Desktop/analisis_CA/fichas_post_partido/data/catapult_data.csv")
 path_xlsx <- Sys.getenv("CARGAS7_XLSX",
-                        unset = "/Users/mateorodriguez/Desktop/analisis_CA/cargas_fisicas_7/data/Sessions_micro01.xlsx")
+                        unset = "/Users/mateorodriguez/Desktop/analisis_CA/club_america_dashboard/apps/cargas_fisicas_7/data/Sessions_micro01.xlsx")
 path_xlsx_apertura26 <- "/Users/mateorodriguez/Desktop/analisis_CA/Temporadas/apertura_26/micros_procesados/Sessions_micro01.xlsx"
 
 write_csv(data_micro, path_csv)
@@ -193,7 +193,8 @@ if (dir.exists(dirname(path_xlsx_apertura26))) {
   write_xlsx(data_micro, path = path_xlsx_apertura26)
 }
 
-path_xlsx_sc <- "/Users/mateorodriguez/Desktop/analisis_CA/session-calculator-r/data/stats_df.xlsx"
+path_xlsx_sc <- Sys.getenv("SESSION_CALC_XLSX",
+                        unset = "/Users/mateorodriguez/Desktop/analisis_CA/club_america_dashboard/apps/session_calculator/data/stats_df.xlsx")
 if (dir.exists(dirname(path_xlsx_sc))) {
   # The session calculator needs period-level rows (to categorize each
   # period into an activity type), so it can't use data_micro (aggregated
