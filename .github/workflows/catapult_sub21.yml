@@ -68,6 +68,17 @@ jobs:
 
       # --- Deploy sub21 to shinyapps.io ---
 
+      # shinyapps.io has no environment-variable support, so the in-app
+      # "Actualizar datos" button's GitHub token is delivered via a
+      # secrets.R file written fresh here and bundled into the deploy —
+      # never committed (sub21/.gitignore excludes it).
+      - name: Write secrets.R for sub21
+        working-directory: sub21
+        env:
+          GH_WORKFLOW_TRIGGER: ${{ secrets.GH_WORKFLOW_TRIGGER }}
+        run: |
+          echo "Sys.setenv(GH_WORKFLOW_TOKEN = \"${GH_WORKFLOW_TRIGGER}\")" > secrets.R
+
       - name: Restore sub21 renv environment
         working-directory: sub21
         run: Rscript -e "source('renv/activate.R'); renv::restore(prompt = FALSE)"
