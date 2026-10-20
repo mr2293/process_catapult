@@ -1,0 +1,97 @@
+name: Sub 21 CATAPULT Fetch & Deploy
+
+on:
+  schedule:
+    - cron: '0 12 * * 2,5'  # 12:00 UTC = 6:00am Mexico City (fixed UTC-6, no DST)
+  workflow_dispatch:      # allow manual trigger from GitHub UI
+
+jobs:
+  fetch-process-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # --- Checkout both repos ---
+
+      - name: Checkout process_catapult
+        uses: actions/checkout@v4
+
+      - name: Checkout sub21
+        uses: actions/checkout@v4
+        with:
+          repository: mr2293/sub21
+          token: ${{ secrets.GH_PAT }}
+          path: sub21
+
+      # --- Set up R ---
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.5'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            libcurl4-openssl-dev libssl-dev libxml2-dev \
+            libfontconfig1-dev libharfbuzz-dev libfribidi-dev \
+            libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev \
+            libuv1-dev
+
+      - name: Install R packages for CATAPULT fetch
+        run: |
+          Rscript -e "install.packages(c(
+            'httr', 'jsonlite', 'dplyr', 'purrr',
+            'tidyverse', 'readr', 'writexl', 'openxlsx', 'tidylog',
+            'pacman'
+          ), repos = 'https://cran.rstudio.com/')"
+
+      # --- Fetch & process Sub 21 data ---
+
+      - name: Run Sub 21 CATAPULT processing
+        env:
+          CATAPULT_TOKEN_SUB21: ${{ secrets.CATAPULT_TOKEN_SUB21 }}
+          DASHBOARD_U21_CSV: ${{ github.workspace }}/sub21/data/micros_shiny_comb_u21.csv
+        run: Rscript catapult_process_u21.R
+
+      # --- Commit updated data to sub21 ---
+
+      - name: Commit data to sub21
+        run: |
+          cd ${{ github.workspace }}/sub21
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/micros_shiny_comb_u21.csv
+          git diff --staged --quiet || git commit -m "chore: update Sub 21 CATAPULT data $(date +'%Y-%m-%d')"
+          for i in 1 2 3; do git push && break || sleep 10; done
+
+      # --- Deploy sub21 to shinyapps.io ---
+
+      - name: Restore sub21 renv environment
+        working-directory: sub21
+        run: Rscript -e "source('renv/activate.R'); renv::restore(prompt = FALSE)"
+
+      - name: Deploy sub21
+        working-directory: sub21
+        env:
+          SHINY_ACC_NAME: ${{ secrets.SHINY_ACC_NAME }}
+          TOKEN: ${{ secrets.SHINY_TOKEN }}
+          SECRET: ${{ secrets.SHINY_SECRET }}
+        run: |
+          Rscript -e "
+          source('renv/activate.R')
+          rsconnect::setAccountInfo(
+            name   = Sys.getenv('SHINY_ACC_NAME'),
+            token  = Sys.getenv('TOKEN'),
+            secret = Sys.getenv('SECRET')
+          )
+          rsconnect::deployApp(
+            appDir = '.',
+            appName = 'sub21',
+            account = Sys.getenv('SHINY_ACC_NAME'),
+            server = 'shinyapps.io',
+            forceUpdate = TRUE,
+            launch.browser = FALSE
+          )
+          "

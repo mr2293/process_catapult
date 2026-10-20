@@ -172,7 +172,7 @@ cat(sprintf("\nProcessed %d rows for %d players across %d sessions (Sub 21).\n",
 # 8) Write outputs
 # =============================================================================
 path_csv <- Sys.getenv("DASHBOARD_U21_CSV",
-                       unset = "/Users/mateorodriguez/Desktop/analisis_CA/process_catapult/output_u21/micros_shiny_comb_u21.csv")
+                       unset = "/Users/mateorodriguez/Desktop/analisis_CA/Temporadas/apertura_26/micros_procesados/micros_shiny_comb_u21.csv")
 
 if (!dir.exists(dirname(path_csv))) dir.create(dirname(path_csv), recursive = TRUE)
 

@@ -1,10 +1,10 @@
 # ============================================================================
 # Catapult Connect API v6 — Full Data Pull + Stats (Sub 21)
 #
-# Same org/token as the first team (CATAPULT_TOKEN) — Sub 21 is a separate
-# team within the same Catapult organization, so after pulling deep activity
-# details we filter down to only the activities tagged with the Sub 21
-# team_id before doing the (expensive) periods/stats pulls.
+# Uses its own dedicated account (CATAPULT_TOKEN_SUB21), same pattern as
+# femenil. The A2b team_id filter below is kept as a safety net in case
+# any non-Sub-21 activity ever ends up in this account, but it is not the
+# primary way Sub 21 sessions are scoped — the token itself is.
 #
 # Endpoints used:
 #   1. GET  /activities                          (list all activity IDs)
@@ -23,14 +23,17 @@ library(purrr)
 
 # --- Configuration -----------------------------------------------------------
 base_url   <- "https://connect-us.catapultsports.com/api/v6"
-token_env  <- Sys.getenv("CATAPULT_TOKEN")
+token_env  <- Sys.getenv("CATAPULT_TOKEN_SUB21")
 token      <- token_env
-if (!nzchar(token)) stop("CATAPULT_TOKEN is not set. Add it to ~/.Renviron and restart R.")
+if (!nzchar(token)) stop("CATAPULT_TOKEN_SUB21 is not set. Add it to ~/.Renviron and restart R.")
 delay_sec  <- 3    # seconds between requests; bump to 60 if you hit 429s
 start_date <- "2026-06-08"  # only fetch activities on or after this date (YYYY-MM-DD)
 
-# Sub 21 team_id (from GET /teams on the main CATAPULT_TOKEN — "America Sub 21")
-u21_team_id <- "dd4adabe-24f2-4645-a1d1-2a67cee4d7ce"
+# Sub 21 team_id (from GET /teams on CATAPULT_TOKEN_SUB21 — "America Sub 21").
+# NB: team_ids are per-account, not global — this is NOT the same id as
+# "America Sub 21" under the main CATAPULT_TOKEN account. Used as a
+# safety-net filter in A2b, not the primary scoping mechanism (the token is).
+u21_team_id <- "6031e099-4d41-4a03-b910-aedb9f1bf746"
 
 # --- Helper: authenticated GET -----------------------------------------------
 catapult_get <- function(endpoint) {
@@ -103,9 +106,6 @@ if (!is.null(start_date) && start_date != "") {
 cat("\n")
 
 # ---- A2: Deep activity details  /activities/{id}?include=all ----------------
-# NB: the /activities list endpoint has no team filter — a team_id query
-# param is silently ignored — so we have to pull deep details for every
-# activity in the org first, then keep only the ones tagged Sub 21 below.
 cat(sprintf("--- Fetching deep activity details (delay = %ds) ---\n", delay_sec))
 
 details_list <- list()
@@ -127,17 +127,22 @@ for (i in seq_along(activity_ids)) {
 details_list <- compact(details_list)
 cat(sprintf("  -> Retrieved deep details for %d activities.\n\n", length(details_list)))
 
-# ---- A2b: Keep only activities tagged with the Sub 21 team -----------------
+# ---- A2b: Safety-net filter — drop anything not tagged Sub 21 --------------
 is_u21_activity <- map_lgl(details_list, function(act) {
   team_ids <- map_chr(act$teams %||% list(), ~ .x$id %||% NA_character_)
   u21_team_id %in% team_ids
 })
 
+n_dropped <- sum(!is_u21_activity)
+if (n_dropped > 0) {
+  cat(sprintf("  -> WARNING: dropping %d activities in this account not tagged Sub 21.\n", n_dropped))
+}
+
 details_list <- details_list[is_u21_activity]
 activity_ids <- names(details_list)
 n_acts       <- length(activity_ids)
 
-cat(sprintf("  -> %d activities belong to Sub 21; periods/stats will only be pulled for these.\n\n", n_acts))
+cat(sprintf("  -> %d Sub 21 activities; periods/stats will be pulled for these.\n\n", n_acts))
 
 # ---- A3: Parse core activity info -------------------------------------------
 activities_df <- map_dfr(details_list, function(act) {
