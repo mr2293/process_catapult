@@ -39,6 +39,19 @@ stats_enriched <- stats_df %>%
   left_join(activity_date_lookup, by = "activity_id") %>%
   left_join(match_day_lookup,     by = "activity_id")
 
+# Match activities (DayCode MD / Game) sometimes also hold non-match periods
+# (compensatorio, no convocados, entrenamiento / entrenamiento con Primera) for
+# players who didn't play. Skip those periods so they don't count as match
+# minutes, and so a player who only did them gets no match row. TDP matches
+# (e.g. "Partido con TDP") are real matches and are kept. Training days
+# (MD-1, MD-2, ...) are left untouched.
+non_match_period_pattern <- "compensatorio|convocados|conovocados|entrenamiento|con primera"
+is_match_activity <- stats_enriched$match_day_raw %in% c("MD", "Game")
+is_non_match_period <- grepl(non_match_period_pattern, stats_enriched$period_name, ignore.case = TRUE)
+cat(sprintf("Skipping %d non-match period rows in match activities.\n",
+            sum(is_match_activity & is_non_match_period, na.rm = TRUE)))
+stats_enriched <- stats_enriched[!(is_match_activity & is_non_match_period), ]
+
 # =============================================================================
 # 5) Aggregate periods → one row per player per activity
 #    - SUM:  distances, durations, efforts, load, counts
