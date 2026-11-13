@@ -64,6 +64,10 @@ data_agg <- stats_enriched %>%
     # Track which sessions were combined
     session_name          = paste(unique(session_name), collapse = " | "),
     match_day_raw         = first(na.omit(match_day_raw)),
+    # TRUE when the player's time in a match activity was a game with another
+    # team (e.g. a "Partido con TDP" period) rather than the Sub 21 match itself.
+    other_team_game       = any(grepl("partido con", period_name, ignore.case = TRUE) &
+                                  match_day_raw %in% c("MD", "Game")),
     # ---- Summed metrics ----
     total_distance_raw    = sum(total_distance,       na.rm = TRUE),
     total_duration_s      = sum(total_duration,        na.rm = TRUE),
@@ -169,7 +173,8 @@ select(
   hia,
   max_acc, max_dec,
   hr_exertion, energy, red_zone,
-  RPE, TL
+  RPE, TL,
+  other_team_game
 ) %>%
   arrange(date, player)
 
